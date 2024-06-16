@@ -1,0 +1,35 @@
+services:
+  redis:
+    image: "redis:latest"
+    container_name: "redis"
+    ports:
+      - "6379:6379"
+
+  mysql:
+    image: "mysql:latest"
+    container_name: "mysql_custom"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 987654321
+      MYSQL_DATABASE: products
+      MYSQL_USER: usertest
+      MYSQL_PASSWORD: 123456789
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring_boot_products
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      SPRING_REDIS_HOST: redis
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql_custom:3306/products?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: usertest
+      SPRING_DATASOURCE_PASSWORD: 123456789
