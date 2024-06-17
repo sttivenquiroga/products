@@ -6,7 +6,6 @@ import com.sttivenquiroga.products.entity.Category;
 import com.sttivenquiroga.products.entity.Product;
 import com.sttivenquiroga.products.repository.CategoryRepository;
 import com.sttivenquiroga.products.repository.ProductRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -72,7 +71,7 @@ public class ProductServiceTest {
     public void updateProductError() {
         ProductDTO productDTO = getProductDTO();
         Mockito.when(productRepository.findById(anyInt())).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> productService.updateProduct(1, productDTO));
+        assertNull(productService.updateProduct(1, productDTO));
     }
 
     @Test
@@ -100,6 +99,16 @@ public class ProductServiceTest {
         List<Product> product = getProductList(3);
         Mockito.when(productRepository.getProductsByCategory_Name(anyString())).thenReturn(Optional.of(product));
         List<Product> expected = productService.getProductByCategory("cualquiera");
+        for (int i = 0; i < expected.size(); i++) {
+            assertValidations(product.get(i), expected.get(i));
+        }
+    }
+
+    @Test
+    public void getAllProducts() {
+        List<Product> product = getProductList(3);
+        Mockito.when(productRepository.getAllProducts()).thenReturn(Optional.of(product));
+        List<Product> expected = productService.getAllProducts();
         for (int i = 0; i < expected.size(); i++) {
             assertValidations(product.get(i), expected.get(i));
         }
