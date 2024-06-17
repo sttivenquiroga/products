@@ -6,16 +6,15 @@ import com.sttivenquiroga.products.entity.Product;
 import com.sttivenquiroga.products.mapper.ProductMapper;
 import com.sttivenquiroga.products.repository.CategoryRepository;
 import com.sttivenquiroga.products.repository.ProductRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,8 +28,7 @@ public class ProductService {
 
     private final ProductMapper productMapper = Mappers.getMapper(ProductMapper.class);
 
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
 
     @Transactional
     @CachePut(value = "product", key = "#id")
@@ -48,7 +46,7 @@ public class ProductService {
             }
             productRepository.save(existProduct);
         } else {
-            throw new EntityNotFoundException("No existe el producto a actualizar");
+            return null;
         }
         return existProduct;
     }
@@ -66,16 +64,16 @@ public class ProductService {
 
     @Cacheable(value = "product", key = "#productId")
     public Product getProductById(Integer productId) {
-        return productRepository.getProductById(productId).orElseThrow(EntityNotFoundException::new);
+        return productRepository.getProductById(productId).orElse(null);
     }
 
     @Cacheable(value = "productsByCategory", key = "#categoryName")
     public List<Product> getProductByCategory(String categoryName) {
-        return productRepository.getProductsByCategory_Name(categoryName).orElseThrow(EntityNotFoundException::new);
+        return productRepository.getProductsByCategory_Name(categoryName).orElse(Collections.emptyList());
     }
     @Transactional
-    public void deleteProductById(Integer productId) {
-        Product product = productRepository.getProductById(productId).orElseThrow(() -> new EntityNotFoundException("Producto no encontrado"));
+    public boolean deleteProductById(Integer productId) {
+        Product product = productRepository.getProductById(productId).orElse(null);
         if (product != null) {
             Category category = product.getCategory();
             productRepository.delete(product);
@@ -84,7 +82,13 @@ public class ProductService {
             if (category.getProducts() != null && category.getProducts().isEmpty()){
                 categoryRepository.delete(category);
             }
+            return true;
         }
+        return false;
+    }
+
+    public List<Product> getAllProducts(){
+        return productRepository.getAllProducts().orElse(Collections.emptyList());
     }
 
     public void clearCache(String nameCache){
