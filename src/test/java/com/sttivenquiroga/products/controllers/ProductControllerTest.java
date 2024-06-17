@@ -70,6 +70,14 @@ public class ProductControllerTest {
     }
 
     @Test
+    public void getProductByIdNoContent() throws Exception {
+        when(productService.getProductById(1)).thenReturn(null);
+        mockMvc.perform(get(commonUrl + "/{productId}", 1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     public void updateProductSuccess() throws Exception {
         ProductDTO productDTO = getProductDTO();
         Product productSaved = getProduct();
@@ -109,10 +117,28 @@ public class ProductControllerTest {
     }
 
     @Test
+    public void getProductByAllCategory() throws Exception {
+        List<Product> responseDb = getProductList(3);
+        when(productService.getAllProducts()).thenReturn(responseDb);
+        mockMvc.perform(get(commonUrl)
+                        .queryParam("categoryName", "all")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     public void deleteProduct() throws Exception {
+        when(productService.deleteProductById(1)).thenReturn(true);
         mockMvc.perform(delete(commonUrl+"/{productId}", 1)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteProductError() throws Exception {
+        mockMvc.perform(delete(commonUrl+"/{productId}", 1)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     private static ProductDTO getProductDTO() {
