@@ -13,4 +13,7 @@ public interface ProductRepository extends CrudRepository<Product, Integer> {
 
     @Query("select p from Product p where p.category.name=:categoryName")
     Optional<List<Product>> getProductsByCategory_Name(String categoryName);
+
+    @Query("select p from Product p")
+    Optional<List<Product>> getAllProducts();
 }
